@@ -129,4 +129,4 @@ cd frontend && streamlit run streamlit_app.py
 
 ---
 
-**Author:** [Kavyansh Vats](https://github.com/Kavyansh180)
+**Author:** [Manikandan](github.com/manikandan0572)
