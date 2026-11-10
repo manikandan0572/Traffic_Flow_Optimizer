@@ -8,7 +8,7 @@ Departure rate: 3 cars/step (≈ 1800 vehicles/hour — real-world saturation fl
 
 Run around 40+ steps for the RL advantage to become statistically significant and then scroll down to see performance summary and comparison chart
 
-**[→ Live Demo](https://traffic-flow-optimizer-2fwlhjq7tvrrvpnd2woh5z.streamlit.app/)**
+**[→ Live Demo](https://trafficflowoptimizer-dyzxulyaq9epawefear8ho.streamlit.app/)**
 
 ---
 
