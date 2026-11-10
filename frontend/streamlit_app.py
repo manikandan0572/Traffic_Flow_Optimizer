@@ -5,8 +5,8 @@ import random
 import time
 import base64
 
-API_ENDPOINT = "https://a2nimgj45qqniergoixy3zqwua0uqhsv.lambda-url.eu-north-1.on.aws/predict"
-HEALTH_ENDPOINT = "https://a2nimgj45qqniergoixy3zqwua0uqhsv.lambda-url.eu-north-1.on.aws/"
+API_ENDPOINT = "https://traffic-flow-apii.onrender.com/predict"
+HEALTH_ENDPOINT = "https://traffic-flow-apii.onrender.com/"
 
 st.set_page_config(
     page_title="RL Traffic Flow Optimizer",
@@ -268,14 +268,14 @@ if "sim_step" not in st.session_state:
 if "auto_target_step" not in st.session_state:
     st.session_state.auto_target_step = 0
 
-# ── ADDITION 1: Silent Lambda warm-up ping on first page load ─────────────────
-if "lambda_warmed" not in st.session_state:
-    st.session_state.lambda_warmed = False
+# ── ADDITION 1: Silent Render API warm-up ping on first page load ─────────────────
+if "api_warmed" not in st.session_state:
+    st.session_state.api_warmed = False
     try:
-        requests.get(HEALTH_ENDPOINT, timeout=15)
-        st.session_state.lambda_warmed = True
+        requests.get(HEALTH_ENDPOINT, timeout=120)
+        st.session_state.api_warmed = True
     except Exception:
-        st.session_state.lambda_warmed = False
+        st.session_state.api_warmed = False
 
 if st.session_state.get("sim_show_reset_msg", False):
     st.success("Simulation reset. Click Step Forward to begin.")
@@ -326,7 +326,7 @@ with st.sidebar:
     st.markdown("PPO-trained RL agent controlling a 4-way intersection in real time.")
     st.markdown("**Model:** PPO · Stable-Baselines3")
     st.markdown("**Env:** Custom Gymnasium")
-    st.markdown("**Deploy:** AWS Lambda · Docker · ECR")
+    st.markdown("**Deploy:** Render · FastAPI")
     st.markdown("**Frontend:** Streamlit · Streamlit Cloud")
 
     st.markdown("---")
@@ -344,7 +344,7 @@ st.info("The RL agent was trained using PPO (Proximal Policy Optimization) on a 
 
 # ── ADDITION 3: Cold start notice — only shown on step 0 ─────────────────────
 if st.session_state.sim_step == 0:
-    warmed = st.session_state.get("lambda_warmed", False)
+    warmed = st.session_state.get("api_warmed", False)
     if warmed:
         st.markdown("""
         <div style="
@@ -357,7 +357,7 @@ if st.session_state.sim_step == 0:
             color: #6fcfa0;
             margin-bottom: 0.5rem;
         ">
-            ✅ <strong style="color:#00ff88">AWS Lambda is warm</strong> — 
+            ✅ <strong style="color:#00ff88">Render API is ready</strong> — 
             Cloud inference container loaded and ready. 
             First step will respond quickly. ⚡
         </div>
@@ -375,7 +375,7 @@ if st.session_state.sim_step == 0:
             margin-bottom: 0.5rem;
         ">
             <strong style="color:#7b61ff">Heads up:</strong>
-            This app runs on <strong>AWS Lambda serverless</strong> infrastructure.
+            This app runs on <strong>Render API</strong> infrastructure.
             The <strong>first Step Forward</strong> may take 5–15 seconds
             while the cloud container cold-starts.
             Subsequent steps will be near-instant. ⚡
@@ -503,7 +503,7 @@ def execute_step():
         "time_on_phase": st.session_state.sim_time_on_phase
     }
 
-    # ── ADDITION 2: Informative status message during Lambda call ─────────────
+    # ── ADDITION 2: Informative status message during API call ─────────────
     with api_status:
         st.markdown("""
         <div style="
@@ -515,14 +515,14 @@ def execute_step():
             font-size: 0.76rem;
             color: #00cfff;
         ">
-             &nbsp;<strong>Invoking AWS Lambda</strong>
-            &nbsp;·&nbsp; Serverless inference running on eu-north-1
+             &nbsp;<strong>Calling Render API</strong>
+            &nbsp;·&nbsp; Serverless inference running on Render
             &nbsp;·&nbsp; Cold start may take 5–10s on first call
         </div>
         """, unsafe_allow_html=True)
 
         try:
-            response = requests.post(API_ENDPOINT, json=payload, timeout=15)
+            response = requests.post(API_ENDPOINT, json=payload, timeout=120)
             if response.status_code == 200:
                 rl_phase = response.json().get("phase", 0)
             else:
@@ -668,7 +668,7 @@ if st.session_state.sim_step < st.session_state.get("auto_target_step", 0):
 
     # Toast on very first auto-run step only
     if steps_left == auto_steps:
-        st.toast(" First step may be slow — Lambda warming up!", icon="⚡")
+        st.toast(" First step may be slow — Render API waking up!", icon="⚡")
 
     st.caption(f" **Auto-running...** {steps_left} steps remaining — metrics updating live")
     execute_step()
